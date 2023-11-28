@@ -32,7 +32,7 @@ void UTetgenRenderingComponent::OnRegister()
 	RenderData.edgeColor = FColor(0, 244, 10);
 	RenderData.pointColor = FColor(186, 0, 0);
 	RenderData.tetGenParam.max_size = "5e2";
-	RenderData.tetGenParam.file_path = "C:/Users/xmyci/Desktop/tetgen1.6.0/build/4m_fix.off";
+	RenderData.tetGenParam.file_path = "C:/Users/xmy/Desktop/test.off";
 	if (GetWorld()->IsServer())
 	{
 	}

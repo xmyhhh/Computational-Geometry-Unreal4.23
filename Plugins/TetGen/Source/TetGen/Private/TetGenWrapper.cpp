@@ -95,6 +95,7 @@ bool TetGenWrapper::Read_vtk(FString file_path, TetGenResult& res)
 				fclose(fp);
 				return false;
 			}
+			res.numberOfPoints = nverts;
 			res.pointList = new double[nverts * 3];
 		}
 		else if (nverts > iverts)

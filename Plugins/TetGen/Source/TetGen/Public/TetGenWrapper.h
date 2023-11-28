@@ -18,10 +18,10 @@ struct Tetrahedra
 
 struct TetGenResult
 {
-	int numberOfPoints;
+	int numberOfPoints = 0;
 	double* pointList;
 
-	int numberOfTetrahedra;
+	int numberOfTetrahedra = 0;
 	Tetrahedra* TetrahedraList;
 };
 
@@ -31,9 +31,7 @@ class TETGEN_API TetGenWrapper
 public:
 	static bool TetrahedralMeshGeneration(TetGenParam p, TetGenResult& res);
 
-
 private:
 	static char* Readline(char* string, FILE* infile, int* linenumber);
 	static bool Read_vtk(FString file_path, TetGenResult& res);
-	
 };
