@@ -31,7 +31,7 @@ private:
 
 protected:
 	void Initialize() override;
-
+	FBoxSphereBounds GetBounds() override;
 	bool GetSectionMeshForLOD(int32 LODIndex, int32 SectionId, FRuntimeMeshRenderableMeshData& MeshData) override;
 	FRuntimeMeshCollisionSettings GetCollisionSettings() override;
 	bool HasCollisionMesh() override;

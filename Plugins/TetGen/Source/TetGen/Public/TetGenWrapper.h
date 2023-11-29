@@ -5,7 +5,7 @@
 
 struct TetGenParam
 {
-	FString max_size = "5e2";
+	FString max_size = "5e5";
 	FString max_radius_edge_ration_bound = "2";
 	FString min_dihedral_angle_bound = "0";
 	FString file_path = "";
@@ -22,7 +22,7 @@ struct TetGenResult
 	double* pointList;
 
 	int numberOfTetrahedra = 0;
-	Tetrahedra* TetrahedraList;
+	Tetrahedra* tetrahedraList;
 };
 
 

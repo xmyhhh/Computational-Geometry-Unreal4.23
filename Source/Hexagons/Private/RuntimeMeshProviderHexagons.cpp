@@ -47,8 +47,13 @@ void URuntimeMeshProviderHexagons::Initialize()
 	Properties.bCastsShadow = true;
 	Properties.bIsVisible = true;
 	Properties.MaterialSlot = 0;
-	Properties.UpdateFrequency = ERuntimeMeshUpdateFrequency::Frequent;
+	Properties.UpdateFrequency = ERuntimeMeshUpdateFrequency::Infrequent;
 	CreateSection(0, 0, Properties);
+}
+
+FBoxSphereBounds URuntimeMeshProviderHexagons::GetBounds()
+{
+	return FBoxSphereBounds(FSphere(FVector::ZeroVector, 7000));
 }
 
 
@@ -65,19 +70,34 @@ bool URuntimeMeshProviderHexagons::GetSectionMeshForLOD(int32 LODIndex, int32 Se
 	// We should only ever be queried for section 0 and lod 0
 	check(SectionId == 0 && LODIndex == 0);
 	TetGenResult res;
-	TetGenWrapper::TetrahedralMeshGeneration(RenderData.tetGenParam, res);
-	int32 NumVertices = res.numberOfPoints;
-	MeshData.ReserveVertices(NumVertices);
+	TetGenWrapper::TetrahedralMeshGeneration(TempRenderData.tetGenParam, res);
 
-	for (uint8 i = 0; i < NumVertices; i++)
+	MeshData.ReserveVertices(res.numberOfPoints);
+	MeshData.Triangles.Reserve(res.numberOfTetrahedra * 4);
+	for (size_t i = 0; i < res.numberOfPoints; i++)
 	{
-		int32 index = AddVertex(
-			MeshData, FVector(res.pointList[i * 3], res.pointList[i * 3 + 1], res.pointList[i * 3 + 2]),
-			RenderData.pointColor);
-	
+		AddVertex(MeshData, FVector(res.pointList[i * 3], res.pointList[i * 3 + 1], res.pointList[i * 3 + 2]),
+		          TempRenderData.pointColor);
+	}
+	for (size_t i = 0; i < res.numberOfTetrahedra; i++)
+	{
+		MeshData.Triangles.Add(res.tetrahedraList[i].pointList[0]);
+		MeshData.Triangles.Add(res.tetrahedraList[i].pointList[1]);
+		MeshData.Triangles.Add(res.tetrahedraList[i].pointList[2]);
+
+		MeshData.Triangles.Add(res.tetrahedraList[i].pointList[0]);
+		MeshData.Triangles.Add(res.tetrahedraList[i].pointList[2]);
+		MeshData.Triangles.Add(res.tetrahedraList[i].pointList[3]);
+
+		MeshData.Triangles.Add(res.tetrahedraList[i].pointList[0]);
+		MeshData.Triangles.Add(res.tetrahedraList[i].pointList[1]);
+		MeshData.Triangles.Add(res.tetrahedraList[i].pointList[3]);
+
+		MeshData.Triangles.Add(res.tetrahedraList[i].pointList[1]);
+		MeshData.Triangles.Add(res.tetrahedraList[i].pointList[2]);
+		MeshData.Triangles.Add(res.tetrahedraList[i].pointList[3]);
 	}
 
-	//UE_LOG(LogTemp, Log, TEXT("Rendered %d sides out of %d total"), numRendered, ObstaclesToRender.Num())
 	return true;
 }
 

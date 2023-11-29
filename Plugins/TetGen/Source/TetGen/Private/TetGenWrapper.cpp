@@ -9,7 +9,7 @@ bool TetGenWrapper::TetrahedralMeshGeneration(TetGenParam p, TetGenResult& res)
 	tetgenbehavior b;
 
 	FString op = "-pBNEFOAa" + p.max_size + "q" + p.max_radius_edge_ration_bound + "/" + p.min_dihedral_angle_bound;
-	op = "-pk";
+	op = "-pkq";
 	char* argv[3] = {"null", TCHAR_TO_ANSI(*op), TCHAR_TO_ANSI(*p.file_path)};
 	if (!b.parse_commandline(3, argv))
 	{
@@ -21,7 +21,7 @@ bool TetGenWrapper::TetrahedralMeshGeneration(TetGenParam p, TetGenResult& res)
 		return false;
 	}
 
-	tetrahedralize(&b, &in, &out, NULL, NULL);
+	//tetrahedralize(&b, &in, &out, NULL, NULL);
 
 
 	//	Read VTK
@@ -77,9 +77,9 @@ bool TetGenWrapper::Read_vtk(FString file_path, TetGenResult& res)
 		printf("File I/O Error:  Cannot create file %s.\n", vtk_file_path);
 		return false;
 	}
-	char dummy[20];
+
 	int nverts = 0, iverts = 0;
-	int nfaces = 0, ifaces = 0;
+	int ntetrahedras = 0, itetrahedras = 0;
 	while ((bufferp = Readline(buffer, fp, &line_count)) != NULL)
 	{
 		if (nverts == 0)
@@ -88,7 +88,8 @@ bool TetGenWrapper::Read_vtk(FString file_path, TetGenResult& res)
 			Readline(buffer, fp, &line_count); //ASCII
 			Readline(buffer, fp, &line_count); //DATASET UNSTRUCTURED_GRID
 			Readline(buffer, fp, &line_count); //POINTS xxxx double
-			if (sscanf(bufferp, "%s %d %s", &dummy, &nverts, &dummy) != 3)
+			sscanf(bufferp, "%*s %d %*s", &nverts);
+			if (nverts < 3)
 			{
 				printf("Syntax error reading header on line %d in file %s\n",
 				       line_count, vtk_file_path);
@@ -104,6 +105,24 @@ bool TetGenWrapper::Read_vtk(FString file_path, TetGenResult& res)
 			res.pointList[iverts * 3 + 1] = (double)strtod(bufferp, &bufferp);
 			res.pointList[iverts * 3 + 2] = (double)strtod(bufferp, &bufferp);
 			iverts++;
+		}
+		else if (ntetrahedras == 0)
+		{
+			//CELLS 35186 175930
+			sscanf(bufferp, "%*s %d %*d", &ntetrahedras);
+			res.tetrahedraList = new Tetrahedra[ntetrahedras];
+			res.numberOfTetrahedra = ntetrahedras;
+		}
+		else if (ntetrahedras > itetrahedras)
+		{
+			res.tetrahedraList[itetrahedras].pointList = new int[4];
+			sscanf(bufferp, "%*d %d %d %d %d",
+			       &res.tetrahedraList[itetrahedras].pointList[0],
+			       &res.tetrahedraList[itetrahedras].pointList[1],
+			       &res.tetrahedraList[itetrahedras].pointList[2],
+			       &res.tetrahedraList[itetrahedras].pointList[3]
+			);
+			itetrahedras++;
 		}
 	}
 

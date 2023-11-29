@@ -624,7 +624,7 @@ private:
 	uint8 Stride;
 
 public:
-	FRuntimeMeshTriangleStream(bool bInUse32BitIndices = false)
+	FRuntimeMeshTriangleStream(bool bInUse32BitIndices = true)
 		: bIsUsing32BitIndices(bInUse32BitIndices), Stride(bInUse32BitIndices ? sizeof(uint32) : sizeof(uint16))
 	{
 
@@ -932,7 +932,7 @@ public:
 	FRuntimeMeshRenderableMeshData()
 		: Tangents(false)
 		, TexCoords(1, false)
-		, Triangles(false)
+		, Triangles(true)
 		, AdjacencyTriangles(false)
 	{
 

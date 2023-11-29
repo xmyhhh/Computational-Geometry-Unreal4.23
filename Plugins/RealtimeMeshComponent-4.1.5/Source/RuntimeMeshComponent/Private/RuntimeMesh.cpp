@@ -98,37 +98,7 @@ void URuntimeMesh::Initialize(URuntimeMeshProvider* Provider)
 		RMC_LOG_VERBOSE("Initialize called with provider already bound to a mesh... Taking ownership.");
 		Provider->Shutdown();
 	}
-
 	check(!Provider->IsBound());
-
-
-// 	{
-// 		FReadScopeLock Lock(MeshProviderLock);
-// 
-// 		// Are we already bound to this provider? If so ignore it
-// 		if (MeshProviderPtr == Provider)
-// 		{
-// 			RMC_LOG_VERBOSE("Initialize called with the same provider as already bound... ignoring.");
-// 			return;
-// 		}
-// 
-// 		// Is this new provider somehow bound to us, but not us to it? 
-// 		if (Provider->IsBound())
-// 		{
-// 			// Are we somehow in some invalid state where the provider is bound to us, but we're not bound to it?
-// 			auto OtherMeshRef = Provider->GetMeshReference().Pin();
-// 			if (OtherMeshRef && (OtherMeshRef.Get() == this))
-// 			{
-// 				RMC_LOG_VERBOSE("Initialize called with RuntimeMeshProvider(%d) bound to us, but not to it...", Provider->GetUniqueID());
-// 				return;
-// 			}
-// 
-// 			RMC_LOG_VERBOSE("Initialize called with provider already bound to RuntimeMesh(%d)... ignoring.", (OtherMeshRef? OtherMeshRef->GetMeshId() : -1));
-// 			return;
-// 		}
-// 	}
-		
-
 #if WITH_EDITOR
 	Modify(true);
 #endif
@@ -634,7 +604,14 @@ void URuntimeMesh::QueueForMeshUpdate()
 				{
 					if (Mesh->MeshProviderPtr->IsThreadSafe())
 					{
-						(new FAutoDeleteAsyncTask<FRuntimeMeshUpdateTask>(Mesh->GetMeshReference()))->StartBackgroundTask(Mesh->GetEngineSubsystem()->GetThreadPool());
+						(new FAutoDeleteAsyncTask<FRuntimeMeshUpdateTask>
+							(
+							Mesh->GetMeshReference()
+							)
+						)->StartBackgroundTask
+						(
+							Mesh->GetEngineSubsystem()->GetThreadPool()
+						);
 					}
 					else
 					{
@@ -772,6 +749,7 @@ void URuntimeMesh::HandleUpdate()
 
 
 			// Update the meshes, use the bulk update path if available and requested
+			
 			if ((LOD.Properties.bCanGetAllSectionsAtOnce || !LOD.Properties.bCanGetSectionsIndependently) && (Sections.Contains(INDEX_NONE) || Sections.Num() == LOD.Sections.Num()))
 			{
 				HandleFullLODUpdate(RenderProxyRef, LODId, bRequiresProxyRecreate);
