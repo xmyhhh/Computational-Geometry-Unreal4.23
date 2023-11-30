@@ -43391,6 +43391,9 @@ void tetgenmesh::out_intersected_facets()
 //                                                                            //
 //============================================================================//
 
+
+#include "TetGenWrapper.h"
+
 void tetrahedralize(tetgenbehavior* b, tetgenio* in, tetgenio* out,
                     tetgenio* addin, tetgenio* bgmin)
 {
@@ -43399,7 +43402,7 @@ void tetrahedralize(tetgenbehavior* b, tetgenio* in, tetgenio* out,
 	REAL cps = (REAL)CLOCKS_PER_SEC;
 
 	tv[0] = clock();
-
+	TetGenWrapper::SetAndBrodacastStage(ETetGenStage::Stage_Calculate_0);
 	m.b = b;
 	m.in = in;
 	m.addin = addin;
@@ -43427,6 +43430,8 @@ void tetrahedralize(tetgenbehavior* b, tetgenio* in, tetgenio* out,
 		// -p
 		m.incrementaldelaunay(ts[0]);
 	}
+
+	TetGenWrapper::SetAndBrodacastStage(ETetGenStage::Stage_Calculate_1);
 
 	tv[2] = clock();
 
@@ -43459,7 +43464,7 @@ void tetrahedralize(tetgenbehavior* b, tetgenio* in, tetgenio* out,
 		}
 	}
 
-
+	TetGenWrapper::SetAndBrodacastStage(ETetGenStage::Stage_Calculate_2);
 	tv[3] = clock();
 
 	if ((b->metric) && (m.bgm != NULL))
@@ -43492,7 +43497,7 @@ void tetrahedralize(tetgenbehavior* b, tetgenio* in, tetgenio* out,
 	}
 
 	tv[4] = clock();
-
+	TetGenWrapper::SetAndBrodacastStage(ETetGenStage::Stage_Calculate_3);
 	if (b->plc && !b->refine)
 	{
 		// -p
@@ -43603,7 +43608,7 @@ void tetrahedralize(tetgenbehavior* b, tetgenio* in, tetgenio* out,
 		// -m or -R
 		m.meshcoarsening();
 	}
-
+	TetGenWrapper::SetAndBrodacastStage(ETetGenStage::Stage_Calculate_4);
 	tv[6] = clock();
 
 	if (!b->quiet)
@@ -43679,7 +43684,7 @@ void tetrahedralize(tetgenbehavior* b, tetgenio* in, tetgenio* out,
 	}
 
 	tv[10] = clock();
-
+	TetGenWrapper::SetAndBrodacastStage(ETetGenStage::Stage_Calculate_4);
 	if (!b->quiet)
 	{
 		if ((b->plc || b->quality) &&
@@ -43696,7 +43701,7 @@ void tetrahedralize(tetgenbehavior* b, tetgenio* in, tetgenio* out,
 	}
 
 	tv[11] = clock();
-
+	TetGenWrapper::SetAndBrodacastStage(ETetGenStage::Stage_Calculate_5);
 	if (!b->quiet)
 	{
 		if (b->plc || b->quality)
@@ -43836,7 +43841,7 @@ void tetrahedralize(tetgenbehavior* b, tetgenio* in, tetgenio* out,
 
 
 	// if (!out && b->vtkview)
-	if ( b->vtkview)
+	if (b->vtkview)
 	{
 		m.outmesh2vtk(NULL, 0); // b->outfilename
 	}

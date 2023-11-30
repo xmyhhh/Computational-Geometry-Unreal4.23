@@ -8,6 +8,9 @@
 #include "RuntimeMeshProviderHexagons.h"
 #include "TetgenRenderingComponent.generated.h"
 
+
+
+
 /**
  * This class is blueprint facing and handles the data, that is replication and removing walls that are no longer needed because they are past the center
  */
@@ -33,5 +36,11 @@ public:
 	FHexRenderData RenderData; //Cache for data to be rendered, that is then passed to the provider
 
 	UFUNCTION(BlueprintCallable)
-	void UpdateMesh(); //Function called when the source data is new and the mesh needs to be updated
+	void UpdateMesh(FHexRenderData data); //Function called when the source data is new and the mesh needs to be updated
+
+	UFUNCTION(BlueprintCallable)
+	ETetGenStage GetTetGenStage();
+
+	UFUNCTION(BlueprintCallable)
+	FTetGenResult_BP GetTetGenStatistic();
 };

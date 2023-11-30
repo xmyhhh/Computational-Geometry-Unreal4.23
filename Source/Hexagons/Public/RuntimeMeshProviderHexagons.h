@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "RuntimeMeshProvider.h"
 #include "Structs.h"
+#include "TetGenWrapper.h"
 #include "RuntimeMeshProviderHexagons.generated.h"
 
 UCLASS(HideCategories = Object, BlueprintType)

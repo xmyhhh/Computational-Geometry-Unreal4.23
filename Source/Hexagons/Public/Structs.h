@@ -17,7 +17,8 @@ struct FHexRenderData
 	UPROPERTY(BlueprintReadWrite)
 	FColor edgeColor;
 
-	TetGenParam tetGenParam;
+	UPROPERTY(BlueprintReadWrite)
+	FTetGenParam tetGenParam;
 
 	UPROPERTY(BlueprintReadWrite)
 	UMaterialInterface* Material;

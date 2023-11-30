@@ -15,24 +15,25 @@ FDateTime UTetgenRenderingComponent::GetGameStartTime(UObject* WorldContextObjec
 
 UTetgenRenderingComponent::UTetgenRenderingComponent(const FObjectInitializer& ObjectInitializer)
 {
-	static ConstructorHelpers::FObjectFinder<UMaterialInterface> MaterialFinder(TEXT("Material'/Game/MeshMaterial.MeshMaterial'"));
+	static ConstructorHelpers::FObjectFinder<UMaterialInterface> MaterialFinder(
+		TEXT("Material'/Game/MeshMaterial.MeshMaterial'"));
 	if (MaterialFinder.Succeeded())
 	{
 		RenderData.Material = MaterialFinder.Object;
 	}
-	bReplicates=true;
+	bReplicates = true;
 }
 
 void UTetgenRenderingComponent::OnRegister()
 {
 	Super::OnRegister();
-	
+
 	SetIsReplicated(true);
 
 	RenderData.edgeColor = FColor(0, 244, 10);
 	RenderData.pointColor = FColor(186, 0, 0);
 	RenderData.tetGenParam.max_size = "5e2";
-	RenderData.tetGenParam.file_path = "C:/Users/xmyci/Desktop/tetgen1.6.0/build/4m_fix.off";
+
 	if (GetWorld()->IsServer())
 	{
 	}
@@ -49,8 +50,26 @@ void UTetgenRenderingComponent::BeginPlay()
 	SetCollisionProfileName("BlockAll");
 }
 
-void UTetgenRenderingComponent::UpdateMesh()
+void UTetgenRenderingComponent::UpdateMesh(FHexRenderData _RenderData)
 {
-	//TODO
+	RenderData = _RenderData;
+	RenderData.tetGenParam.file_path = "C:/Users/xmyci/Desktop/tetgen1.6.0/build/4m_fix.off";
 	HexagonProvider->SetRenderData(RenderData);
+}
+
+ETetGenStage UTetgenRenderingComponent::GetTetGenStage()
+{
+	return TetGenWrapper::GetTetGenStage();
+}
+
+FTetGenResult_BP UTetgenRenderingComponent::GetTetGenStatistic()
+{
+	FTetGenResult_BP res;
+	if (TetGenWrapper::GetTetGenLastResult != nullptr)
+	{
+		res.numberOfPoints = TetGenWrapper::GetTetGenLastResult()->numberOfPoints;
+		res.numberOfTetrahedra = TetGenWrapper::GetTetGenLastResult()->numberOfTetrahedra;
+	}
+
+	return res;
 }

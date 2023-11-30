@@ -3,31 +3,64 @@
 #include "StringConv.h"
 #include "tetgen_lib.h"
 
-bool TetGenWrapper::TetrahedralMeshGeneration(TetGenParam p, TetGenResult& res)
+ETetGenStage TetGenWrapper::GetTetGenStage()
 {
+	FScopeLock Lock(&stageGuard);
+	return statge;
+}
+
+const TetGenResult* TetGenWrapper::GetTetGenLastResult()
+{
+	return lastResult;
+}
+
+bool TetGenWrapper::TetrahedralMeshGeneration(FTetGenParam p, TetGenResult*& res)
+{
+
 	tetgenio in, out;
 	tetgenbehavior b;
 
+	SetAndBrodacastStage(ETetGenStage::Stage_Begin);
+
 	FString op = "-pBNEFOAa" + p.max_size + "q" + p.max_radius_edge_ration_bound + "/" + p.min_dihedral_angle_bound;
-	op = "-pkq";
+
 	char* argv[3] = {"null", TCHAR_TO_ANSI(*op), TCHAR_TO_ANSI(*p.file_path)};
 	if (!b.parse_commandline(3, argv))
 	{
 		return false;
 	}
-
+	SetAndBrodacastStage(ETetGenStage::Stage_LoadGeometry);
 	if (!in.load_plc(b.infilename, (int)b.object))
 	{
 		return false;
 	}
 
-	//tetrahedralize(&b, &in, &out, NULL, NULL);
+	tetrahedralize(&b, &in, &out, NULL, NULL);
 
+	if (lastResult != nullptr)
+	{
+		if (lastResult->pointList != nullptr)
+			delete(lastResult->pointList);
+		if (lastResult->tetrahedraList != nullptr)
+			delete(lastResult->tetrahedraList);
+		lastResult = nullptr;
+	}
 
 	//	Read VTK
-	Read_vtk(p.file_path, res);
+	lastResult = new TetGenResult();
+	res = lastResult;
+	Read_vtk(p.file_path, *res);
 
+	SetAndBrodacastStage(ETetGenStage::Stage_End);
 	return true;
+}
+
+
+void TetGenWrapper::SetAndBrodacastStage(ETetGenStage value)
+{
+	FScopeLock Lock(&stageGuard);
+	statge = value;
+	OnTetGenStageChanged.Broadcast(statge);
 }
 
 char* TetGenWrapper::Readline(char* string, FILE* infile, int* linenumber)
@@ -128,3 +161,9 @@ bool TetGenWrapper::Read_vtk(FString file_path, TetGenResult& res)
 
 	return true;
 }
+
+FCriticalSection TetGenWrapper::stageGuard;
+ETetGenStage TetGenWrapper::statge = ETetGenStage::Stage_Begin;
+FOnTetGenStageChangedSignature TetGenWrapper::OnTetGenStageChanged;
+TetGenResult* TetGenWrapper::lastResult = nullptr;
+

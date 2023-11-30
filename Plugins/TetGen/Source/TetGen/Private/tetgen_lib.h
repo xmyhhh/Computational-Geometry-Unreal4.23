@@ -2635,7 +2635,7 @@ inline void terminatetetgen(tetgenmesh* m, int x)
 		printf("Boundary contains Steiner points (-YY option). Program stopped.\n");
 		break;
 	} // switch (x)
-	exit(x);
+	//exit(x);
 #endif // #ifdef TETLIBRARY
 }
 

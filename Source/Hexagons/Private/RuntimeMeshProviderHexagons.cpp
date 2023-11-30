@@ -2,7 +2,7 @@
 
 
 #include "RuntimeMeshProviderHexagons.h"
-#include "TetGenWrapper.h"
+
 
 void URuntimeMeshProviderHexagons::SetRenderData(FHexRenderData& InRenderData)
 {
@@ -62,41 +62,45 @@ bool URuntimeMeshProviderHexagons::GetSectionMeshForLOD(int32 LODIndex, int32 Se
                                                         FRuntimeMeshRenderableMeshData& MeshData)
 {
 	QUICK_SCOPE_CYCLE_COUNTER(STAT_ProviderHexagon_GetSectionMesh);
-	FDateTime RenderTime = FDateTime::UtcNow();
+	
 	FHexRenderData TempRenderData;
 	{
 		FScopeLock Lock(&PropertySyncRoot);
 		TempRenderData = RenderData;
 	}
+
+	if (TempRenderData.tetGenParam.file_path.IsEmpty())
+		return false;
+	
 	// We should only ever be queried for section 0 and lod 0
 	check(SectionId == 0 && LODIndex == 0);
-	TetGenResult res;
+	TetGenResult *res;
 	TetGenWrapper::TetrahedralMeshGeneration(TempRenderData.tetGenParam, res);
 
-	MeshData.ReserveVertices(res.numberOfPoints);
-	MeshData.Triangles.Reserve(res.numberOfTetrahedra * 4);
-	for (size_t i = 0; i < res.numberOfPoints; i++)
+	MeshData.ReserveVertices(res->numberOfPoints);
+	MeshData.Triangles.Reserve(res->numberOfTetrahedra * 4);
+	for (size_t i = 0; i < res->numberOfPoints; i++)
 	{
-		AddVertex(MeshData, FVector(res.pointList[i * 3], res.pointList[i * 3 + 1], res.pointList[i * 3 + 2]),
+		AddVertex(MeshData, FVector(res->pointList[i * 3], res->pointList[i * 3 + 1], res->pointList[i * 3 + 2]),
 		          TempRenderData.pointColor);
 	}
-	for (size_t i = 0; i < res.numberOfTetrahedra; i++)
+	for (size_t i = 0; i <res->numberOfTetrahedra; i++)
 	{
-		MeshData.Triangles.Add(res.tetrahedraList[i].pointList[0]);
-		MeshData.Triangles.Add(res.tetrahedraList[i].pointList[1]);
-		MeshData.Triangles.Add(res.tetrahedraList[i].pointList[2]);
+		MeshData.Triangles.Add(res->tetrahedraList[i].pointList[0]);
+		MeshData.Triangles.Add(res->tetrahedraList[i].pointList[1]);
+		MeshData.Triangles.Add(res->tetrahedraList[i].pointList[2]);
 
-		MeshData.Triangles.Add(res.tetrahedraList[i].pointList[0]);
-		MeshData.Triangles.Add(res.tetrahedraList[i].pointList[2]);
-		MeshData.Triangles.Add(res.tetrahedraList[i].pointList[3]);
-
-		MeshData.Triangles.Add(res.tetrahedraList[i].pointList[0]);
-		MeshData.Triangles.Add(res.tetrahedraList[i].pointList[1]);
-		MeshData.Triangles.Add(res.tetrahedraList[i].pointList[3]);
-
-		MeshData.Triangles.Add(res.tetrahedraList[i].pointList[1]);
-		MeshData.Triangles.Add(res.tetrahedraList[i].pointList[2]);
-		MeshData.Triangles.Add(res.tetrahedraList[i].pointList[3]);
+		// MeshData.Triangles.Add(res->tetrahedraList[i].pointList[0]);
+		// MeshData.Triangles.Add(res->tetrahedraList[i].pointList[2]);
+		// MeshData.Triangles.Add(res->tetrahedraList[i].pointList[3]);
+		//
+		// MeshData.Triangles.Add(res->tetrahedraList[i].pointList[0]);
+		// MeshData.Triangles.Add(res->tetrahedraList[i].pointList[1]);
+		// MeshData.Triangles.Add(res->tetrahedraList[i].pointList[3]);
+		//
+		// MeshData.Triangles.Add(res->tetrahedraList[i].pointList[1]);
+		// MeshData.Triangles.Add(res->tetrahedraList[i].pointList[2]);
+		// MeshData.Triangles.Add(res->tetrahedraList[i].pointList[3]);
 	}
 
 	return true;
@@ -118,9 +122,7 @@ bool URuntimeMeshProviderHexagons::HasCollisionMesh()
 
 bool URuntimeMeshProviderHexagons::GetCollisionMesh(FRuntimeMeshCollisionData& CollisionData)
 {
-	float RenderTime = UKismetSystemLibrary::GetGameTimeInSeconds(this);
-
-
+	//float RenderTime = UKismetSystemLibrary::GetGameTimeInSeconds(this);
 	return true;
 }
 
