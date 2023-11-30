@@ -22,7 +22,7 @@ bool TetGenWrapper::TetrahedralMeshGeneration(FTetGenParam p, TetGenResult*& res
 
 	SetAndBrodacastStage(ETetGenStage::Stage_Begin);
 
-	FString op = "-pBNEFOAa" + p.max_size + "q" + p.max_radius_edge_ration_bound + "/" + p.min_dihedral_angle_bound;
+	FString op = "-pkBNEFOAa" + p.max_size + "q" + p.max_radius_edge_ration_bound + "/" + p.min_dihedral_angle_bound;
 
 	char* argv[3] = {"null", TCHAR_TO_ANSI(*op), TCHAR_TO_ANSI(*p.file_path)};
 	if (!b.parse_commandline(3, argv))

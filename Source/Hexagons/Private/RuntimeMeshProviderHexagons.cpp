@@ -90,17 +90,17 @@ bool URuntimeMeshProviderHexagons::GetSectionMeshForLOD(int32 LODIndex, int32 Se
 		MeshData.Triangles.Add(res->tetrahedraList[i].pointList[1]);
 		MeshData.Triangles.Add(res->tetrahedraList[i].pointList[2]);
 
-		// MeshData.Triangles.Add(res->tetrahedraList[i].pointList[0]);
-		// MeshData.Triangles.Add(res->tetrahedraList[i].pointList[2]);
-		// MeshData.Triangles.Add(res->tetrahedraList[i].pointList[3]);
-		//
-		// MeshData.Triangles.Add(res->tetrahedraList[i].pointList[0]);
-		// MeshData.Triangles.Add(res->tetrahedraList[i].pointList[1]);
-		// MeshData.Triangles.Add(res->tetrahedraList[i].pointList[3]);
-		//
-		// MeshData.Triangles.Add(res->tetrahedraList[i].pointList[1]);
-		// MeshData.Triangles.Add(res->tetrahedraList[i].pointList[2]);
-		// MeshData.Triangles.Add(res->tetrahedraList[i].pointList[3]);
+		MeshData.Triangles.Add(res->tetrahedraList[i].pointList[0]);
+		MeshData.Triangles.Add(res->tetrahedraList[i].pointList[2]);
+		MeshData.Triangles.Add(res->tetrahedraList[i].pointList[3]);
+		
+		MeshData.Triangles.Add(res->tetrahedraList[i].pointList[0]);
+		MeshData.Triangles.Add(res->tetrahedraList[i].pointList[1]);
+		MeshData.Triangles.Add(res->tetrahedraList[i].pointList[3]);
+		
+		MeshData.Triangles.Add(res->tetrahedraList[i].pointList[1]);
+		MeshData.Triangles.Add(res->tetrahedraList[i].pointList[2]);
+		MeshData.Triangles.Add(res->tetrahedraList[i].pointList[3]);
 	}
 
 	return true;
