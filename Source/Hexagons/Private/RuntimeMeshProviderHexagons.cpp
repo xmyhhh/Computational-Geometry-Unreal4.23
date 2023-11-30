@@ -47,6 +47,7 @@ void URuntimeMeshProviderHexagons::Initialize()
 	Properties.bCastsShadow = true;
 	Properties.bIsVisible = true;
 	Properties.MaterialSlot = 0;
+	Properties.bWants32BitIndices = true;
 	Properties.UpdateFrequency = ERuntimeMeshUpdateFrequency::Infrequent;
 	CreateSection(0, 0, Properties);
 }
