@@ -22,4 +22,8 @@ struct FHexRenderData
 
 	UPROPERTY(BlueprintReadWrite)
 	UMaterialInterface* Material;
+
+	FString file_path;
+
+	TetGenInputPLC input;
 };

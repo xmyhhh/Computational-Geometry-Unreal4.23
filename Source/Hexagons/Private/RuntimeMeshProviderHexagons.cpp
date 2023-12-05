@@ -62,20 +62,195 @@ bool URuntimeMeshProviderHexagons::GetSectionMeshForLOD(int32 LODIndex, int32 Se
                                                         FRuntimeMeshRenderableMeshData& MeshData)
 {
 	QUICK_SCOPE_CYCLE_COUNTER(STAT_ProviderHexagon_GetSectionMesh);
-	
+
 	FHexRenderData TempRenderData;
 	{
 		FScopeLock Lock(&PropertySyncRoot);
 		TempRenderData = RenderData;
 	}
 
-	if (TempRenderData.tetGenParam.file_path.IsEmpty())
+	if (TempRenderData.file_path.IsEmpty())
 		return false;
-	
+
 	// We should only ever be queried for section 0 and lod 0
 	check(SectionId == 0 && LODIndex == 0);
-	TetGenResult *res;
-	TetGenWrapper::TetrahedralMeshGeneration(TempRenderData.tetGenParam, res);
+	TetGenResult* res;
+	if (false/*use_file*/)
+
+	{
+		TetGenWrapper::TetrahedralMeshGeneration(TempRenderData.file_path, TempRenderData.tetGenParam, res);
+	}
+	else
+	{
+		//example code of load off file to TetGenInputPLC
+		{
+			FILE* fp;
+			fp = fopen(TCHAR_TO_ANSI(*TempRenderData.file_path), "r");
+			if (!(fp))
+			{
+				printf("  Unable to open file %s\n", TCHAR_TO_ANSI(*TempRenderData.file_path));
+				return false;
+			}
+
+			auto readline = [](char* string, FILE* infile, int* linenumber)
+			{
+				char* result;
+
+				// Search for a non-empty line.
+				do
+				{
+					result = fgets(string, 2048 - 1, infile);
+					if (linenumber) (*linenumber)++;
+					if (result == (char*)NULL)
+					{
+						return (char*)NULL;
+					}
+					// Skip white spaces.
+					while ((*result == ' ') || (*result == '\t')) result++;
+					// If it's end of line, read another line and try again.
+				}
+				while ((*result == '\0') || (*result == '\r') || (*result == '\n'));
+				return result;
+			};
+			auto findnextnumber = [](char* string)
+			{
+				char* result;
+
+				result = string;
+				// Skip the current field.  Stop upon reaching whitespace or a comma.
+				while ((*result != '\0') && (*result != '#') && (*result != ' ') &&
+					(*result != '\t') && (*result != ','))
+				{
+					result++;
+				}
+				// Now skip the whitespace and anything else that doesn't look like a
+				//   number, a comment, or the end of a line. 
+				while ((*result != '\0') && (*result != '#')
+					&& (*result != '.') && (*result != '+') && (*result != '-')
+					&& ((*result < '0') || (*result > '9')))
+				{
+					result++;
+				}
+				// Check for a comment (prefixed with `#').
+				if (*result == '#')
+				{
+					*result = '\0';
+				}
+				return result;
+			};
+			
+			char buffer[2048];
+			char* bufferp;
+			int line_count = 0;
+			int nverts = 0, iverts = 0;
+			int nfaces = 0, ifaces = 0;
+			int nedges = 0;
+			int smallestidx;
+			{
+				while ((bufferp = readline(buffer, fp, &line_count)) != NULL)
+				{
+					// Check section
+					if (nverts == 0)
+					{
+						// Read header 
+						bufferp = strstr(bufferp, "OFF");
+						if (bufferp != NULL)
+						{
+							// Read mesh counts
+							bufferp = findnextnumber(bufferp); // Skip field "OFF".
+							if (*bufferp == '\0')
+							{
+								// Read a non-empty line.
+								bufferp = readline(buffer, fp, &line_count);
+							}
+							if ((sscanf(bufferp, "%d%d%d", &nverts, &nfaces, &nedges) != 3)
+								|| (nverts == 0))
+							{
+
+								fclose(fp);
+								return false;
+							}
+							// Allocate memory for 'tetgenio'
+							if (nverts > 0)
+							{
+								TempRenderData.input.numberOfPoints = nverts;
+								TempRenderData.input.pointList = new double[nverts * 3];
+								smallestidx = nverts + 1; // A bigger enough number.
+							}
+							if (nfaces > 0)
+							{
+								TempRenderData.input.numberOfFace = nfaces;
+								TempRenderData.input.faceList = new Polygon[nfaces];
+							}
+						}
+					}
+					else if (iverts < nverts)
+					{
+						// Read vertex coordinates
+						double*  coord = &TempRenderData.input.pointList[iverts * 3];
+						for (int i = 0; i < 3; i++)
+						{
+							if (*bufferp == '\0')
+							{
+								fclose(fp);
+								return false;
+							}
+							coord[i] = (double)strtod(bufferp, &bufferp);
+							bufferp = findnextnumber(bufferp);
+						}
+						iverts++;
+					}
+					else if (ifaces < nfaces)
+					{
+						// Get next face
+						auto f = &TempRenderData.input.faceList[ifaces];
+						
+						// In .off format, each facet has one polygon, no hole.
+				
+						f->pointList = new int[3];
+						auto p = &f->pointList[0];
+						// Read the number of vertices, it should be greater than 0.
+						f->numberOfPoints = (int)strtol(bufferp, &bufferp, 0);
+			
+						if (f->numberOfPoints !=3)
+						{
+							fclose(fp);
+							return false;
+						}
+						// Allocate memory for face vertices
+					
+						for (int i = 0; i < 3; i++)
+						{
+							bufferp = findnextnumber(bufferp);
+							if (*bufferp == '\0')
+							{
+			
+								fclose(fp);
+								return false;
+							}
+							p[i] = (int)strtol(bufferp, &bufferp, 0);
+							// Detect the smallest index.
+							if (p[i] < smallestidx)
+							{
+								smallestidx = p[i];
+							}
+						}
+						ifaces++;
+					}
+					else
+					{
+						// Should never get here
+
+						break;
+					}
+				}
+
+				fclose(fp);
+			}
+		}
+
+		TetGenWrapper::TetrahedralMeshGeneration(TempRenderData.input, TempRenderData.tetGenParam, res);
+	}
 
 	MeshData.ReserveVertices(res->numberOfPoints);
 	MeshData.Triangles.Reserve(res->numberOfTetrahedra * 4);
@@ -84,7 +259,7 @@ bool URuntimeMeshProviderHexagons::GetSectionMeshForLOD(int32 LODIndex, int32 Se
 		AddVertex(MeshData, FVector(res->pointList[i * 3], res->pointList[i * 3 + 1], res->pointList[i * 3 + 2]),
 		          TempRenderData.pointColor);
 	}
-	for (size_t i = 0; i <res->numberOfTetrahedra; i++)
+	for (size_t i = 0; i < res->numberOfTetrahedra; i++)
 	{
 		MeshData.Triangles.Add(res->tetrahedraList[i].pointList[0]);
 		MeshData.Triangles.Add(res->tetrahedraList[i].pointList[1]);
@@ -93,11 +268,11 @@ bool URuntimeMeshProviderHexagons::GetSectionMeshForLOD(int32 LODIndex, int32 Se
 		MeshData.Triangles.Add(res->tetrahedraList[i].pointList[0]);
 		MeshData.Triangles.Add(res->tetrahedraList[i].pointList[2]);
 		MeshData.Triangles.Add(res->tetrahedraList[i].pointList[3]);
-		
+
 		MeshData.Triangles.Add(res->tetrahedraList[i].pointList[0]);
 		MeshData.Triangles.Add(res->tetrahedraList[i].pointList[1]);
 		MeshData.Triangles.Add(res->tetrahedraList[i].pointList[3]);
-		
+
 		MeshData.Triangles.Add(res->tetrahedraList[i].pointList[1]);
 		MeshData.Triangles.Add(res->tetrahedraList[i].pointList[2]);
 		MeshData.Triangles.Add(res->tetrahedraList[i].pointList[3]);

@@ -13,7 +13,6 @@ struct FTetGenParam
 	FString max_radius_edge_ration_bound = "2";
 	UPROPERTY(BlueprintReadWrite)
 	FString min_dihedral_angle_bound = "0";
-	FString file_path = "";
 };
 
 struct Tetrahedra
@@ -21,9 +20,20 @@ struct Tetrahedra
 	int* pointList;
 };
 
+struct Polygon
+{
+	int numberOfPoints = 3; //3表示三角形
+	int* pointList;
+};
 
+struct TetGenInputPLC
+{
+	int numberOfPoints = 0;
+	double* pointList;
 
-
+	int numberOfFace = 0;
+	Polygon* faceList;
+};
 
 struct TetGenResult
 {
@@ -67,16 +77,17 @@ class TETGEN_API TetGenWrapper
 {
 public:
 	static ETetGenStage GetTetGenStage();
-	static const TetGenResult* GetTetGenLastResult() ;
-	static bool TetrahedralMeshGeneration(FTetGenParam p, TetGenResult*& res);
+	static const TetGenResult* GetTetGenLastResult();
+	static bool TetrahedralMeshGeneration(FString file_path, FTetGenParam p, TetGenResult*& res);
+	static bool TetrahedralMeshGeneration(TetGenInputPLC input, FTetGenParam p, TetGenResult*& res);
 	static FOnTetGenStageChangedSignature OnTetGenStageChanged;
+
 	static void SetAndBrodacastStage(ETetGenStage value);
-	
+
 private:
 	static FCriticalSection stageGuard;
 	static char* Readline(char* string, FILE* infile, int* linenumber);
 	static bool Read_vtk(FString file_path, TetGenResult& res);
 	static ETetGenStage statge;
 	static TetGenResult* lastResult;
-
 };

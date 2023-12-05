@@ -53,7 +53,7 @@ void UTetgenRenderingComponent::BeginPlay()
 void UTetgenRenderingComponent::UpdateMesh(FHexRenderData _RenderData)
 {
 	RenderData = _RenderData;
-	RenderData.tetGenParam.file_path = "C:/Users/xmyci/Desktop/tetgen1.6.0/build/4m_fix.off";
+	RenderData.file_path = "C:/Users/xmyci/Desktop/tetgen1.6.0/build/yulongshan_fix.off";
 	HexagonProvider->SetRenderData(RenderData);
 }
 
