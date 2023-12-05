@@ -76,7 +76,6 @@ bool URuntimeMeshProviderHexagons::GetSectionMeshForLOD(int32 LODIndex, int32 Se
 	check(SectionId == 0 && LODIndex == 0);
 	TetGenResult* res;
 	if (false/*use_file*/)
-
 	{
 		TetGenWrapper::TetrahedralMeshGeneration(TempRenderData.file_path, TempRenderData.tetGenParam, res);
 	}
@@ -248,7 +247,6 @@ bool URuntimeMeshProviderHexagons::GetSectionMeshForLOD(int32 LODIndex, int32 Se
 				fclose(fp);
 			}
 		}
-
 		TetGenWrapper::TetrahedralMeshGeneration(TempRenderData.input, TempRenderData.tetGenParam, res);
 	}
 
